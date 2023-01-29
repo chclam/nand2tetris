@@ -9,9 +9,9 @@
  */
 
 CHIP Or16 {
-    IN a[16], b[16];
-    OUT out[16];
-
-    PARTS:
-    // Put your code here:
+  IN a[16], b[16];
+  OUT out[16];
+  
+  PARTS:
+  Not16(a=a, b=b, out=out);
 }
