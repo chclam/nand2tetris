@@ -12,9 +12,33 @@
  */
 
 CHIP DMux8Way {
-    IN in, sel[3];
-    OUT a, b, c, d, e, f, g, h;
+  IN in, sel[3];
+  OUT a, b, c, d, e, f, g, h;
+  PARTS:
+  Not(in=sel[0], out=notsel0);
+  Not(in=sel[1], out=notsel1);
+  Not(in=sel[2], out=notsel2);
 
-    PARTS:
-    // Put your code here:
+  And(a=notsel0, b=notsel1, out=notsel0notsel1);
+  And(a=sel[0], b=notsel1, out=sel0notsel1);
+  And(a=notsel0, b=sel[1], out=notsel0sel1);
+  And(a=sel[0], b=sel[1], out=sel0sel1);
+
+  And(a=notsel0notsel1, b=notsel2, out=reta);  /* 000 */
+  And(a=sel0notsel1, b=notsel2, out=retb);     /* 001 */
+  And(a=notsel0sel1, b=notsel2, out=retc);     /* 010 */
+  And(a=sel0sel1, b=notsel2, out=retd);        /* 011 */
+  And(a=notsel0notsel1, b=sel[2], out=rete);   /* 100 */
+  And(a=sel0notsel1, b=sel[2], out=retf);      /* 101 */
+  And(a=notsel0sel1, b=sel[2], out=retg);      /* 110 */
+  And(a=sel0sel1, b=sel[2], out=reth);         /* 111 */
+
+  And(a=reta, b=in, out=a);
+  And(a=retb, b=in, out=b);
+  And(a=retc, b=in, out=c);
+  And(a=retd, b=in, out=d);
+  And(a=rete, b=in, out=e);
+  And(a=retf, b=in, out=f);
+  And(a=retg, b=in, out=g);
+  And(a=reth, b=in, out=h);
 }
