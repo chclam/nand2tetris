@@ -13,6 +13,7 @@ CHIP FullAdder {
       carry;   /* Left bit of a + b + c  */
   
   PARTS:
+  /*
   Xor(a=a, b=b, out=sum1);
   Xor(a=sum1, b=c, out=sum);
 
@@ -22,4 +23,8 @@ CHIP FullAdder {
   And(a=a, b=b, out=carry3);
 
   Or(a=carry2, b=carry3, out=carry);
+  */
+  HalfAdder(a=a, b=b, sum=sum1, carry=carry1);
+  HalfAdder(a=sum1, b=c, sum=sum, carry=carry2);
+  Or(a=carry1, b=carry2, out=carry);
 }
