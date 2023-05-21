@@ -23,29 +23,6 @@
  * to their new values only in the next time step. If reset==1 then the 
  * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
  * than to the address resulting from executing the current instruction. 
-
-
- =====
- Notes
- =====
- A-instruction:
-   0vvv vvvv vvvv vvvv
-
-   where:
-     * the v-bits form a constant or memory location.
-
- C-instruction:
-   1nna cccc ccdd djjj
-
-   where: 
-     * the n-bits are not used.
-     * the a-bit controls whether y=D or y=M in the ALU input.
-     * the c-bits are the instruction bits for the ALU input.
-     * the d-bits are the bits for setting the destination registers (D, M, A, MD, AMD, etc.).
-     * the j-bits determine the checks for the jump-instruction.
-  
-  Assembly language structure:
-    dest=comp;jump 
  */
 
 CHIP CPU {
