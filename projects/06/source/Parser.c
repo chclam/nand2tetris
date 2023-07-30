@@ -31,12 +31,28 @@ int commandType() {
   return A_COMMAND for @Xxx where Xxx is either a symbol or a decimal number;
   return C_COMMAND for dest=comp;jump
   return L_COMMAND (Actually pseudo command)(Xxx) where Xxx is a symbol. */
-  int isA = strchr(currCommand, '@') != NULL;
-  int isC = strchr(currCommand, '=') != NULL;
-  int isL = strchr(currCommand, '(') != NULL && strchr(currCommand, ';') != NULL;
+
+  char *commentPtr = strstr(currCommand, "//");
+  if (commentPtr == NULL) commentPtr = (currCommand + strlen(currCommand) - 1);
+
+  char *atPtr = strchr(currCommand, '@');
+  int isA = (atPtr != NULL) && (atPtr < commentPtr);
+
+  char *eqPtr = strchr(currCommand, '=');
+  int isC = (eqPtr != NULL) && (eqPtr < commentPtr);
+
+  char *leftBrPtr = strchr(currCommand, '(');
+  char *rightBrPtr = strchr(currCommand, ')');
+  int isL = (leftBrPtr < commentPtr) && (rightBrPtr < commentPtr);
+  isL = isL && (leftBrPtr != NULL && rightBrPtr != NULL);
+
+  if ((leftBrPtr != NULL) != (rightBrPtr != NULL)) {
+    fprintf(stderr, "Unmatched brackets for L Command in line %d: %s", currLineNumber, currCommand);
+  }
 
   if (isA + isC + isL > 1) {
-    fprintf(stderr, "Invalid command found at line %d: %s", currLineNumber, currCommand);
+    // One line can only consist of one command in this assembly language!
+    fprintf(stderr, "Invalid command found in line %d: %s", currLineNumber, currCommand);
     exit(1);
   }
 
@@ -60,5 +76,10 @@ int main(int argc, char** argv) {
   } 
 
   inputFileName = argv[1];
+  while (hasMoreCommands()) {
+    int cmdType = commandType();
+    printf("%d", cmdType);
+    advance();
+  }
 }
 

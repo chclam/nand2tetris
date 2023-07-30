@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-gcc Parser.c && ./a.out add/Add.asm 
+gcc Parser.c && ./a.out ../input/add/Add.asm 
