@@ -1,10 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
-#define A_COMMAND 0;
-#define C_COMMAND 1;
-#define L_COMMAND 2;
+#define A_COMMAND 0
+#define C_COMMAND 1
+#define L_COMMAND 2
 
 FILE *ifp;
 char *inputFileName;
@@ -48,6 +49,7 @@ int commandType() {
 
   if ((leftBrPtr != NULL) != (rightBrPtr != NULL)) {
     fprintf(stderr, "Unmatched brackets for L Command in line %d: %s", currLineNumber, currCommand);
+    exit(1);
   }
 
   if (isA + isC + isL > 1) {
@@ -60,6 +62,29 @@ int commandType() {
   if (isC) return C_COMMAND;
   if (isL) return L_COMMAND;
   return -1;
+}
+
+char *symbol() {
+  int cmdType = commandType();
+  if ((cmdType != A_COMMAND) && (cmdType != L_COMMAND)) return NULL;
+
+  char *ret = malloc(sizeof(char)*256);
+
+  char *atPtr = strchr(currCommand, '@');
+
+  char *endPtr = atPtr + strlen(atPtr);
+  char *symbolPtr = atPtr; 
+  char *symbolEndPtr;
+  // todo: bug: it only returns the @... off by one error!
+  while (symbolPtr < endPtr) {
+    char currChar = *symbolPtr;
+    if (!(isalpha(currChar) || currChar == '_' || currChar == '.' || currChar == ':')) {
+      symbolEndPtr = symbolPtr;
+      break;
+    }
+  }
+  strncpy(ret, atPtr, symbolEndPtr - atPtr);
+  return ret;
 }
 
 int main(int argc, char** argv) {
@@ -77,8 +102,7 @@ int main(int argc, char** argv) {
 
   inputFileName = argv[1];
   while (hasMoreCommands()) {
-    int cmdType = commandType();
-    printf("%d", cmdType);
+    printf("%s", symbol());
     advance();
   }
 }
