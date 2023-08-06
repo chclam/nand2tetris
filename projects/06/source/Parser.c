@@ -3,9 +3,10 @@
 #include <string.h>
 #include <ctype.h>
 
-#define A_COMMAND 0
-#define C_COMMAND 1
-#define L_COMMAND 2
+#define A_COMMAND    0
+#define C_COMMAND    1
+#define L_COMMAND    2
+#define NOT_COMMAND -1
 
 FILE *ifp;
 char *inputFileName;
@@ -44,47 +45,60 @@ int commandType() {
 
   char *leftBrPtr = strchr(currCommand, '(');
   char *rightBrPtr = strchr(currCommand, ')');
-  int isL = (leftBrPtr < commentPtr) && (rightBrPtr < commentPtr);
-  isL = isL && (leftBrPtr != NULL && rightBrPtr != NULL);
+  int isL = (leftBrPtr < commentPtr) && (rightBrPtr < commentPtr); // Check if brackets occur before "//"
+  isL = isL && (leftBrPtr != NULL) && (rightBrPtr != NULL);  
+  isL = isL && (leftBrPtr < rightBrPtr);                           // Check if "(" occurs before ")"
 
   if ((leftBrPtr != NULL) != (rightBrPtr != NULL)) {
-    fprintf(stderr, "Unmatched brackets for L Command in line %d: %s", currLineNumber, currCommand);
+    fprintf(stderr, "Unmatched brackets for L Command in line %d: %s\n", currLineNumber, currCommand);
     exit(1);
   }
 
   if (isA + isC + isL > 1) {
     // One line can only consist of one command in this assembly language!
-    fprintf(stderr, "Invalid command found in line %d: %s", currLineNumber, currCommand);
+    fprintf(stderr, "Invalid command found in line %d: %s\n", currLineNumber, currCommand);
     exit(1);
   }
 
   if (isA) return A_COMMAND;
   if (isC) return C_COMMAND;
   if (isL) return L_COMMAND;
-  return -1;
+  return NOT_COMMAND;
 }
 
 char *symbol() {
   int cmdType = commandType();
-  if ((cmdType != A_COMMAND) && (cmdType != L_COMMAND)) return NULL;
 
-  char *ret = malloc(sizeof(char)*256);
+  if (!(cmdType == A_COMMAND || cmdType == L_COMMAND)) return NULL;
 
-  char *atPtr = strchr(currCommand, '@');
+  char *allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_.$:";
 
-  char *endPtr = atPtr + strlen(atPtr);
-  char *symbolPtr = atPtr; 
-  char *symbolEndPtr;
-  // todo: bug: it only returns the @... off by one error!
-  while (symbolPtr < endPtr) {
-    char currChar = *symbolPtr;
-    if (!(isalpha(currChar) || currChar == '_' || currChar == '.' || currChar == ':')) {
-      symbolEndPtr = symbolPtr;
-      break;
+  if (cmdType == A_COMMAND) {
+    char *atPtr = strchr(currCommand, '@');
+    char *symbolPtr = atPtr + 1;
+    int symbolLen = strspn(symbolPtr, allowed);
+
+    char *ret = malloc(sizeof(char)*symbolLen);
+    strncpy(ret, symbolPtr, symbolLen);
+    return ret;
+
+  } else {
+    char *leftBrPtr = strchr(currCommand, '(');
+    char *rightBrPtr = strchr(currCommand, ')');
+
+    char *symbolPtr = leftBrPtr + 1;
+    int symbolLen = (int)(rightBrPtr - leftBrPtr - 1);
+
+    if (strspn(symbolPtr, allowed) < symbolLen) {
+      fprintf(stderr, "Invalid symbol for L COMMAND at line %d: %s\n", currLineNumber, currCommand);
+      exit(1);
     }
-  }
-  strncpy(ret, atPtr, symbolEndPtr - atPtr);
-  return ret;
+
+    char *ret = malloc(sizeof(char)*symbolLen);
+    strncpy(ret, symbolPtr, symbolLen);
+
+    return ret;
+  } 
 }
 
 int main(int argc, char** argv) {
@@ -102,7 +116,7 @@ int main(int argc, char** argv) {
 
   inputFileName = argv[1];
   while (hasMoreCommands()) {
-    printf("%s", symbol());
+    printf("%s\n", symbol());
     advance();
   }
 }
