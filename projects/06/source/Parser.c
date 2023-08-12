@@ -45,6 +45,7 @@ int commandType() {
 
   char *leftBrPtr = strchr(currCommand, '(');
   char *rightBrPtr = strchr(currCommand, ')');
+
   int isL = (leftBrPtr < commentPtr) && (rightBrPtr < commentPtr); // Check if brackets occur before "//"
   isL = isL && (leftBrPtr != NULL) && (rightBrPtr != NULL);  
   isL = isL && (leftBrPtr < rightBrPtr);                           // Check if "(" occurs before ")"
@@ -101,6 +102,30 @@ char *symbol() {
   } 
 }
 
+char *dest() {
+  /* Returns the dest mnemonic in the current c-command (8 possiblities).
+  Should be called only when commandType() is C_COMMAND. */
+  int cmdType = commandType();
+
+  if (cmdType != C_COMMAND) return NULL;
+
+  char *equalsPtr = strchr(currCommand, '=');
+  if (equalsPtr == NULL) return NULL;
+
+  char *destMnemonic = currCommand;
+  while (isspace(*destMnemonic)) destMnemonic++; // trim spaces, tabs etc left
+  int destLen = (int)(equalsPtr - destMnemonic);
+
+  char *validMnemonics = "MDA";
+  if (strspn(destMnemonic, validMnemonics) < destLen) {
+    fprintf(stderr, "Invalid symbol for C COMMAND at line %d: %s\n", currLineNumber, currCommand);
+  }
+
+  char *ret = malloc(sizeof(char)*destLen);
+  strncpy(ret, destMnemonic, destLen);
+  return ret;
+}
+
 int main(int argc, char** argv) {
   if (argc < 2) {
     fprintf(stderr, "No file name provided in the arguments.\n");
@@ -117,6 +142,7 @@ int main(int argc, char** argv) {
   inputFileName = argv[1];
   while (hasMoreCommands()) {
     printf("%s\n", symbol());
+    printf("%s\n", dest());
     advance();
   }
 }
