@@ -14,7 +14,7 @@ char *inputFileName;
 int currLineNumber = 0;
 char currCommand[1024];
 
-const char *validComps[] = {
+const char *VALID_COMPS[] = {
   "0"  , "1"  , "-1" ,
   "D"  , "A"  , "M"  ,
   "!D" , "!A" , "!M" ,
@@ -26,12 +26,14 @@ const char *validComps[] = {
   "D-M", "M-D", "D&M",
   "D|M"
 }; 
+const int VALID_COMPS_LEN = sizeof(VALID_COMPS) * sizeof(char*);
 
-const char *validJumps[] = {
+const char *VALID_JUMPS[] = {
   "JGT", "JEQ", "JGE",
   "JLT", "JNE", "JLE",
   "JMP"
 }; 
+const int VALID_JUMPS_LEN = sizeof(VALID_JUMPS) * sizeof(char*);
 
 int hasMoreCommands() {
   /* Are there more commands in the input? */
@@ -180,9 +182,8 @@ char *comp() {
     strncpy(ret, compPtr, compLen);
   }
 
-  int validCompsLen = sizeof(validComps) / sizeof(char*);
-  for (int i=0; i<validCompsLen; i++) {
-    if (strcmp(ret, validComps[i]) == 0) return ret;
+  for (int i=0; i<VALID_COMPS_LEN; i++) {
+    if (strcmp(ret, VALID_COMPS[i]) == 0) return ret;
   }
   return NULL;
 }
@@ -203,9 +204,8 @@ char *jump() {
   char *ret = malloc(sizeof(char)*jumpLen);
   strncpy(ret, jumpPtr, jumpLen);
 
-  int validJumpsLen = sizeof(validJumps)/sizeof(char*);
-  for (int i=0; i<validJumpsLen; i++) {
-    if (strcmp(ret, validJumps[i]) == 0) return ret;
+  for (int i=0; i<VALID_JUMPS_LEN; i++) {
+    if (strcmp(ret, VALID_JUMPS[i]) == 0) return ret;
   }
   return NULL;
 }
