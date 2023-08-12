@@ -14,6 +14,24 @@ char *inputFileName;
 int currLineNumber = 0;
 char currCommand[1024];
 
+char *validComps[] = {
+  "0", "1", "-1", "D", "A", "!D",
+  "!A", "-D", "-A", "D+1", "A+1", "D-1",
+  "A-1", "D+A", "D-A", "A-D", "D&A", "D|A",
+  "M", "!M", "-M", "M+1", "M-1", "D+M", "D-M",
+  "M-D", "D&M", "D|M"
+}; // @speed
+
+char *validJumps[] = {
+  "JGT",
+  "JEQ",
+  "JGE",
+  "JLT",
+  "JNE",
+  "JLE",
+  "JMP"
+}; // @speed
+
 int hasMoreCommands() {
   /* Are there more commands in the input? */
   return !feof(ifp);
@@ -24,7 +42,13 @@ void advance() {
   Should be called only if hasMoreCommands() is true.
   Initially there is no current command. */
   if (!hasMoreCommands()) return;
+
   fgets(currCommand, 1024, ifp);
+
+  // truncate currCommand until comments
+  char *commentPtr = strstr(currCommand, "//");
+  if (commentPtr != NULL) *commentPtr = '\0';
+
   currLineNumber++;
 }
 
@@ -34,24 +58,22 @@ int commandType() {
   return C_COMMAND for dest=comp;jump
   return L_COMMAND (Actually pseudo command)(Xxx) where Xxx is a symbol. */
 
-  char *commentPtr = strstr(currCommand, "//");
-  if (commentPtr == NULL) commentPtr = (currCommand + strlen(currCommand) - 1);
-
   char *atPtr = strchr(currCommand, '@');
-  int isA = (atPtr != NULL) && (atPtr < commentPtr);
+  int isA = (atPtr != NULL);
 
   char *eqPtr = strchr(currCommand, '=');
-  int isC = (eqPtr != NULL) && (eqPtr < commentPtr);
+  char *semiColonPtr = strchr(currCommand, ';');
+  int isC = (eqPtr != NULL) || (semiColonPtr != NULL);
+  if ((eqPtr != NULL) && (semiColonPtr != NULL)) {
+    fprintf(stderr, "Unambiguous C Command in line %d: %s\n", currLineNumber, currCommand);
+    exit(1);
+  }
 
   char *leftBrPtr = strchr(currCommand, '(');
   char *rightBrPtr = strchr(currCommand, ')');
-
-  int isL = (leftBrPtr < commentPtr) && (rightBrPtr < commentPtr); // Check if brackets occur before "//"
-  isL = isL && (leftBrPtr != NULL) && (rightBrPtr != NULL);  
-  isL = isL && (leftBrPtr < rightBrPtr);                           // Check if "(" occurs before ")"
-
+  int isL = (leftBrPtr != NULL) && (rightBrPtr != NULL) && (leftBrPtr < rightBrPtr); // Check if "(" occurs before ")"
   if ((leftBrPtr != NULL) != (rightBrPtr != NULL)) {
-    fprintf(stderr, "Unmatched brackets for L Command in line %d: %s\n", currLineNumber, currCommand);
+    fprintf(stderr, "Invalid brackets for L Command in line %d: %s\n", currLineNumber, currCommand);
     exit(1);
   }
 
@@ -105,9 +127,7 @@ char *symbol() {
 char *dest() {
   /* Returns the dest mnemonic in the current c-command (8 possiblities).
   Should be called only when commandType() is C_COMMAND. */
-  int cmdType = commandType();
-
-  if (cmdType != C_COMMAND) return NULL;
+  if (commandType() != C_COMMAND) return NULL;
 
   char *equalsPtr = strchr(currCommand, '=');
   if (equalsPtr == NULL) return NULL;
@@ -116,14 +136,77 @@ char *dest() {
   while (isspace(*destMnemonic)) destMnemonic++; // trim spaces, tabs etc left
   int destLen = (int)(equalsPtr - destMnemonic);
 
-  char *validMnemonics = "MDA";
-  if (strspn(destMnemonic, validMnemonics) < destLen) {
-    fprintf(stderr, "Invalid symbol for C COMMAND at line %d: %s\n", currLineNumber, currCommand);
-  }
-
   char *ret = malloc(sizeof(char)*destLen);
   strncpy(ret, destMnemonic, destLen);
+  
+  if ((strstr("AMD", ret) == NULL) && (strstr("AD", ret) == NULL)) {
+    fprintf(stderr, "Invalid dest for C Command at line %d: %s\n", currLineNumber, currCommand);
+    exit(1);
+  }
+
   return ret;
+}
+
+char *comp() {
+  /* Returns the comp mnemonic in the current C-command (28 possibilities).
+  Should be called only when commandType() is C_COMMAND.
+
+  Format of a C_COMMAND: dest=comp;jump */
+  if (commandType() != C_COMMAND) return NULL;
+
+  // '=' XOR ';' must be in currCommand since this is checked in commandType()
+  char *eqPtr = strchr(currCommand, '=');
+  char *semiColonPtr = strchr(currCommand, ';');
+
+  char *ret;
+
+  if (eqPtr != NULL) {
+    char *compPtr = eqPtr + 1;
+    while (isspace(*compPtr)) compPtr++; // trim off whitespace left
+    int compLen = 0;
+    while (!isspace(compPtr[compLen])) compLen++;
+
+    ret = malloc(sizeof(char)*strlen(compPtr));
+    strncpy(ret, compPtr, compLen);
+
+  } else {
+    char *compPtr = currCommand;
+
+    while (isspace(*compPtr)) compPtr++; // trim off whitespace left
+
+    int compLen = (int)(semiColonPtr - compPtr);
+    ret = malloc(sizeof(char)*compLen);
+    strncpy(ret, compPtr, compLen);
+  }
+
+  int validCompsLen = sizeof(validComps) / sizeof(char*);
+  for (int i=0; i<validCompsLen; i++) {
+    if (strcmp(ret, validComps[i]) == 0) return ret;
+  }
+  return NULL;
+}
+
+char *jump() {
+  /* Returns the jump mnemonic in the current C-command
+  (8 possilibities)
+  */
+  if (commandType() != C_COMMAND) return NULL;
+
+  char *semiColonPtr = strchr(currCommand, ';');
+  if (semiColonPtr == NULL) return NULL;
+
+  char *jumpPtr = semiColonPtr + 1;
+  int jumpLen = 0;
+  while (!isspace(jumpPtr[jumpLen])) jumpLen++;
+  
+  char *ret = malloc(sizeof(char)*jumpLen);
+  strncpy(ret, jumpPtr, jumpLen);
+
+  int validJumpsLen = sizeof(validJumps)/sizeof(char*);
+  for (int i=0; i<validJumpsLen; i++) {
+    if (strcmp(ret, validJumps[i]) == 0) return ret;
+  }
+  return NULL;
 }
 
 int main(int argc, char** argv) {
@@ -141,8 +224,21 @@ int main(int argc, char** argv) {
 
   inputFileName = argv[1];
   while (hasMoreCommands()) {
-    printf("%s\n", symbol());
-    printf("%s\n", dest());
+    char *sym = symbol();
+    char *destMnem = dest();
+    char *compCom = comp();
+    char *jumpCom = jump();
+
+    printf("%s\n", sym);
+    printf("%s\n", destMnem);
+    printf("%s\n", compCom);
+    printf("%s\n", jumpCom);
+
+    free(sym);
+    free(destMnem);
+    free(compCom);
+    free(jumpCom);
+
     advance();
   }
 }
