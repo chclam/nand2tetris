@@ -14,23 +14,24 @@ char *inputFileName;
 int currLineNumber = 0;
 char currCommand[1024];
 
-char *validComps[] = {
-  "0", "1", "-1", "D", "A", "!D",
-  "!A", "-D", "-A", "D+1", "A+1", "D-1",
-  "A-1", "D+A", "D-A", "A-D", "D&A", "D|A",
-  "M", "!M", "-M", "M+1", "M-1", "D+M", "D-M",
-  "M-D", "D&M", "D|M"
-}; // @speed
+const char *validComps[] = {
+  "0"  , "1"  , "-1" ,
+  "D"  , "A"  , "M"  ,
+  "!D" , "!A" , "!M" ,
+  "-D" , "-A" , "-M" ,
+  "D+1", "A+1", "M+1",
+  "D-1", "A-1", "M-1",
+  "D+A", "D+M", "D-A",
+  "A-D", "D&A", "D|A",
+  "D-M", "M-D", "D&M",
+  "D|M"
+}; 
 
-char *validJumps[] = {
-  "JGT",
-  "JEQ",
-  "JGE",
-  "JLT",
-  "JNE",
-  "JLE",
+const char *validJumps[] = {
+  "JGT", "JEQ", "JGE",
+  "JLT", "JNE", "JLE",
   "JMP"
-}; // @speed
+}; 
 
 int hasMoreCommands() {
   /* Are there more commands in the input? */
@@ -163,10 +164,11 @@ char *comp() {
   if (eqPtr != NULL) {
     char *compPtr = eqPtr + 1;
     while (isspace(*compPtr)) compPtr++; // trim off whitespace left
-    int compLen = 0;
-    while (!isspace(compPtr[compLen])) compLen++;
 
     ret = malloc(sizeof(char)*strlen(compPtr));
+
+    int compLen = 0;
+    while (!isspace(compPtr[compLen])) compLen++; // get the length of the comp until spaces
     strncpy(ret, compPtr, compLen);
 
   } else {
@@ -224,21 +226,13 @@ int main(int argc, char** argv) {
 
   inputFileName = argv[1];
   while (hasMoreCommands()) {
-    char *sym = symbol();
-    char *destMnem = dest();
-    char *compCom = comp();
-    char *jumpCom = jump();
-
-    printf("%s\n", sym);
-    printf("%s\n", destMnem);
-    printf("%s\n", compCom);
-    printf("%s\n", jumpCom);
-
-    free(sym);
-    free(destMnem);
-    free(compCom);
-    free(jumpCom);
-
+    if (commandType() == C_COMMAND) {
+      printf("%s=%s;%s\n", dest(), comp(), jump());
+    } else if (commandType() == A_COMMAND) {
+      printf("@%s\n", symbol());
+    } else {
+      printf("(%s)\n", symbol());
+    }
     advance();
   }
 }
