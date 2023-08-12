@@ -164,11 +164,10 @@ char *comp() {
   if (eqPtr != NULL) {
     char *compPtr = eqPtr + 1;
     while (isspace(*compPtr)) compPtr++; // trim off whitespace left
-
-    ret = malloc(sizeof(char)*strlen(compPtr));
-
     int compLen = 0;
     while (!isspace(compPtr[compLen])) compLen++; // get the length of the comp until spaces
+
+    ret = malloc(sizeof(char)*compLen);
     strncpy(ret, compPtr, compLen);
 
   } else {
