@@ -14,23 +14,26 @@ char *inputFileName;
 int currLineNumber = 0;
 char currCommand[1024];
 
-char *validComps[] = {
-  "0", "1", "-1", "D", "A", "!D",
-  "!A", "-D", "-A", "D+1", "A+1", "D-1",
-  "A-1", "D+A", "D-A", "A-D", "D&A", "D|A",
-  "M", "!M", "-M", "M+1", "M-1", "D+M", "D-M",
-  "M-D", "D&M", "D|M"
-}; // @speed
+const char *VALID_COMPS[] = {
+  "0"  , "1"  , "-1" ,
+  "D"  , "A"  , "M"  ,
+  "!D" , "!A" , "!M" ,
+  "-D" , "-A" , "-M" ,
+  "D+1", "A+1", "M+1",
+  "D-1", "A-1", "M-1",
+  "D+A", "D+M", "D-A",
+  "A-D", "D&A", "D|A",
+  "D-M", "M-D", "D&M",
+  "D|M"
+}; 
+const int VALID_COMPS_LEN = sizeof(VALID_COMPS) * sizeof(char*);
 
-char *validJumps[] = {
-  "JGT",
-  "JEQ",
-  "JGE",
-  "JLT",
-  "JNE",
-  "JLE",
+const char *VALID_JUMPS[] = {
+  "JGT", "JEQ", "JGE",
+  "JLT", "JNE", "JLE",
   "JMP"
-}; // @speed
+}; 
+const int VALID_JUMPS_LEN = sizeof(VALID_JUMPS) * sizeof(char*);
 
 int hasMoreCommands() {
   /* Are there more commands in the input? */
@@ -164,9 +167,9 @@ char *comp() {
     char *compPtr = eqPtr + 1;
     while (isspace(*compPtr)) compPtr++; // trim off whitespace left
     int compLen = 0;
-    while (!isspace(compPtr[compLen])) compLen++;
+    while (!isspace(compPtr[compLen])) compLen++; // get the length of the comp until spaces
 
-    ret = malloc(sizeof(char)*strlen(compPtr));
+    ret = malloc(sizeof(char)*compLen);
     strncpy(ret, compPtr, compLen);
 
   } else {
@@ -179,9 +182,8 @@ char *comp() {
     strncpy(ret, compPtr, compLen);
   }
 
-  int validCompsLen = sizeof(validComps) / sizeof(char*);
-  for (int i=0; i<validCompsLen; i++) {
-    if (strcmp(ret, validComps[i]) == 0) return ret;
+  for (int i=0; i<VALID_COMPS_LEN; i++) {
+    if (strcmp(ret, VALID_COMPS[i]) == 0) return ret;
   }
   return NULL;
 }
@@ -202,9 +204,8 @@ char *jump() {
   char *ret = malloc(sizeof(char)*jumpLen);
   strncpy(ret, jumpPtr, jumpLen);
 
-  int validJumpsLen = sizeof(validJumps)/sizeof(char*);
-  for (int i=0; i<validJumpsLen; i++) {
-    if (strcmp(ret, validJumps[i]) == 0) return ret;
+  for (int i=0; i<VALID_JUMPS_LEN; i++) {
+    if (strcmp(ret, VALID_JUMPS[i]) == 0) return ret;
   }
   return NULL;
 }
@@ -224,24 +225,13 @@ int main(int argc, char** argv) {
 
   inputFileName = argv[1];
   while (hasMoreCommands()) {
-    char *sym = symbol();
-    char *destMnem = dest();
-    char *compCom = comp();
-    char *jumpCom = jump();
-
-    printf("-------\n");
-    printf("%s", currCommand);
-    printf("-------\n");
-    printf("SYMB %s\n", sym);
-    printf("DEST %s\n", destMnem);
-    printf("COMP %s\n", compCom);
-    printf("JUMP %s\n", jumpCom);
-    printf("\n");
-
-    free(sym);
-    free(destMnem);
-    free(compCom);
-    free(jumpCom);
+    if (commandType() == C_COMMAND) {
+      printf("%s=%s;%s\n", dest(), comp(), jump());
+    } else if (commandType() == A_COMMAND) {
+      printf("@%s\n", symbol());
+    } else {
+      printf("(%s)\n", symbol());
+    }
 
     advance();
   }
