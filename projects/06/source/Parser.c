@@ -229,10 +229,14 @@ int main(int argc, char** argv) {
     char *compCom = comp();
     char *jumpCom = jump();
 
-    printf("%s\n", sym);
-    printf("%s\n", destMnem);
-    printf("%s\n", compCom);
-    printf("%s\n", jumpCom);
+    printf("-------\n");
+    printf("%s", currCommand);
+    printf("-------\n");
+    printf("SYMB %s\n", sym);
+    printf("DEST %s\n", destMnem);
+    printf("COMP %s\n", compCom);
+    printf("JUMP %s\n", jumpCom);
+    printf("\n");
 
     free(sym);
     free(destMnem);
