@@ -71,8 +71,10 @@ int main(int argc, char** argv) {
                 SYMB_BIT_LEN, symbInt);
         return 1;
       }
-      strcat(cmdOut, valBin);
 
+      free(symb);
+
+      strcat(cmdOut, valBin);
       printf("%s\n", cmdOut);
 
     } else if (cmdType == L_COMMAND) {
@@ -92,9 +94,13 @@ int main(int argc, char** argv) {
 
       char *destBin = codeDest(dest);
       char *compBin = codeComp(comp);
-      char *jumpBin = codeDest(jump);
+      char *jumpBin = codeJump(jump);
 
       strcat(cmdOut, compBin);
+
+      free(dest);
+      free(comp);
+      free(jump);
 
       if (dest != NULL) {
         // comp
@@ -108,6 +114,7 @@ int main(int argc, char** argv) {
       }
 
       printf("%s\n", cmdOut);
+
 
     } else if (cmdType == NOT_COMMAND) {
       // do nothing

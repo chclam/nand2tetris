@@ -29,13 +29,13 @@ char *codeJump(char *mnemonic) {
   // deal with it.
   if (mnemonic == NULL) return NULL;
 
-  if (strcmp(mnemonic, "JGT")) return "001";
-  if (strcmp(mnemonic, "JEQ")) return "010";
-  if (strcmp(mnemonic, "JGE")) return "011";
-  if (strcmp(mnemonic, "JLT")) return "100";
-  if (strcmp(mnemonic, "JNE")) return "101";
-  if (strcmp(mnemonic, "JLE")) return "110";
-  if (strcmp(mnemonic, "JMP")) return "111";
+  if (strstr(mnemonic, "JGT")) return "001";
+  if (strstr(mnemonic, "JEQ")) return "010";
+  if (strstr(mnemonic, "JGE")) return "011";
+  if (strstr(mnemonic, "JLT")) return "100";
+  if (strstr(mnemonic, "JNE")) return "101";
+  if (strstr(mnemonic, "JLE")) return "110";
+  if (strstr(mnemonic, "JMP")) return "111";
 
   return NULL;
 }
@@ -50,17 +50,17 @@ char *codeComp(char *mnemonic) {
     switch (mnemonic[0]) {
       case '0': return "0101010";
       case '1': return "0111111";
+      case 'M': return "1110000";
       case 'A': return "0110000";
       case 'D': return "0001100";
-      case 'M': return "1001100";
     }
   } else if (mnemonicLen == 2) {
     // unary operators
     if (mnemonic[0] == '!') {
       // !X
+      if (mnemonic[1] == 'M') return "1110001";
       if (mnemonic[1] == 'A') return "0110001";
       if (mnemonic[1] == 'D') return "0001101";
-      if (mnemonic[1] == 'M') return "1110001";
 
       fprintf(stderr, "Unknown negation command: %s\n", mnemonic);
       return NULL;
@@ -68,9 +68,9 @@ char *codeComp(char *mnemonic) {
     } else if (mnemonic[0] == '-') {
       // -X
       if (mnemonic[1] == '1') return "0111010";
+      if (mnemonic[1] == 'M') return "1110011";
       if (mnemonic[1] == 'A') return "0110011";
       if (mnemonic[1] == 'D') return "0001111";
-      if (mnemonic[1] == 'M') return "1110011";
 
       fprintf(stderr, "Unknown unary subtractive command: %s\n", mnemonic);
       return NULL;
