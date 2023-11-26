@@ -1,15 +1,9 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdio.h>
 
-#define A_COMMAND    0
-#define C_COMMAND    1
-#define L_COMMAND    2
-#define NOT_COMMAND -1
-
-FILE *ifp;
-char *inputFileName;
+#include "CommandTypes.h"
 
 int currLineNumber = 0;
 char currCommand[1024];
@@ -35,27 +29,27 @@ const char *VALID_JUMPS[] = {
 }; 
 const int VALID_JUMPS_LEN = sizeof(VALID_JUMPS) * sizeof(char*);
 
-int hasMoreCommands() {
+int parserHasMoreCommands(FILE *ifp) {
   /* Are there more commands in the input? */
   return !feof(ifp);
 }
 
-void advance() {
+void parserAdvance(FILE *ifp) {
   /* Reads the next command from the input and makes it the current command.
   Should be called only if hasMoreCommands() is true.
   Initially there is no current command. */
-  if (!hasMoreCommands()) return;
+  if (!parserHasMoreCommands(ifp)) return;
 
   fgets(currCommand, 1024, ifp);
 
   // truncate currCommand until comments
   char *commentPtr = strstr(currCommand, "//");
-  if (commentPtr != NULL) *commentPtr = '\0';
+  if (commentPtr) *commentPtr = '\0';
 
   currLineNumber++;
 }
 
-int commandType() {
+int parserCommandType() {
   /* Returns the type of current command.
   return A_COMMAND for @Xxx where Xxx is either a symbol or a decimal number;
   return C_COMMAND for dest=comp;jump
@@ -92,8 +86,8 @@ int commandType() {
   return NOT_COMMAND;
 }
 
-char *symbol() {
-  int cmdType = commandType();
+char *parserSymbol() {
+  int cmdType = parserCommandType();
 
   if (!(cmdType == A_COMMAND || cmdType == L_COMMAND)) return NULL;
 
@@ -127,19 +121,23 @@ char *symbol() {
   } 
 }
 
-char *dest() {
+char *parserDest() {
   /* Returns the dest mnemonic in the current c-command (8 possiblities).
   Should be called only when commandType() is C_COMMAND. */
-  if (commandType() != C_COMMAND) return NULL;
+  if (parserCommandType() != C_COMMAND) return NULL;
 
   char *equalsPtr = strchr(currCommand, '=');
-  if (equalsPtr == NULL) return NULL;
+  if (!equalsPtr) return NULL;
 
   char *destMnemonic = currCommand;
   while (isspace(*destMnemonic)) destMnemonic++; // trim spaces, tabs etc left
   int destLen = (int)(equalsPtr - destMnemonic);
 
   char *ret = malloc(sizeof(char)*destLen);
+  if (!ret) {
+    fprintf(stderr, "Failed to allocate memory at line %d\n", currLineNumber);
+    return NULL;
+  }
   strncpy(ret, destMnemonic, destLen);
   
   if ((strstr("AMD", ret) == NULL) && (strstr("AD", ret) == NULL)) {
@@ -150,12 +148,12 @@ char *dest() {
   return ret;
 }
 
-char *comp() {
+char *parserComp() {
   /* Returns the comp mnemonic in the current C-command (28 possibilities).
   Should be called only when commandType() is C_COMMAND.
 
   Format of a C_COMMAND: dest=comp;jump */
-  if (commandType() != C_COMMAND) return NULL;
+  if (parserCommandType() != C_COMMAND) return NULL;
 
   // '=' XOR ';' must be in currCommand since this is checked in commandType()
   char *eqPtr = strchr(currCommand, '=');
@@ -163,7 +161,7 @@ char *comp() {
 
   char *ret;
 
-  if (eqPtr != NULL) {
+  if (eqPtr) {
     char *compPtr = eqPtr + 1;
     while (isspace(*compPtr)) compPtr++; // trim off whitespace left
     int compLen = 0;
@@ -188,11 +186,11 @@ char *comp() {
   return NULL;
 }
 
-char *jump() {
+char *parserJump() {
   /* Returns the jump mnemonic in the current C-command
   (8 possilibities)
   */
-  if (commandType() != C_COMMAND) return NULL;
+  if (parserCommandType() != C_COMMAND) return NULL;
 
   char *semiColonPtr = strchr(currCommand, ';');
   if (semiColonPtr == NULL) return NULL;
@@ -210,30 +208,4 @@ char *jump() {
   return NULL;
 }
 
-int main(int argc, char** argv) {
-  if (argc < 2) {
-    fprintf(stderr, "No file name provided in the arguments.\n");
-    return 1;
-  }
-
-  // open input file
-  ifp = fopen(argv[1], "r");
-  if (ifp == NULL) {
-    fprintf(stderr, "File %s not found.\n", argv[1]); 
-    return 1;
-  } 
-
-  inputFileName = argv[1];
-  while (hasMoreCommands()) {
-    if (commandType() == C_COMMAND) {
-      printf("%s=%s;%s\n", dest(), comp(), jump());
-    } else if (commandType() == A_COMMAND) {
-      printf("@%s\n", symbol());
-    } else {
-      printf("(%s)\n", symbol());
-    }
-
-    advance();
-  }
-}
 

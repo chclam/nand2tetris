@@ -1,8 +1,8 @@
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
+#include <stdlib.h> 
+#include <stdio.h>
 
-char *dest(char* mnemonic) {
+char *codeDest(char* mnemonic) {
   char *ret = malloc(sizeof(char) * 3);
   strcpy(ret, "000");
 
@@ -24,7 +24,7 @@ char *dest(char* mnemonic) {
   return ret;
 }
 
-char* jump(char* mnemonic) {
+char *codeJump(char *mnemonic) {
   // this sucks so freaking much but I'm too lazy to implement a hash function myself in C.
   // deal with it.
   if (mnemonic == NULL) return NULL;
@@ -40,7 +40,7 @@ char* jump(char* mnemonic) {
   return NULL;
 }
 
-char* comp(char* mnemonic) {
+char *codeComp(char *mnemonic) {
   if (mnemonic == NULL) return NULL;
 
   int mnemonicLen = strlen(mnemonic);
@@ -130,12 +130,8 @@ char* comp(char* mnemonic) {
     fprintf(stderr, "Invalid command length: %s\n", mnemonic);
     return NULL;
   }
+
   fprintf(stderr, "Failed to convert command: %s\n", mnemonic);
   return NULL;
 }
 
-int main() {
-  printf("%s", dest("AMD"));
-  printf("%s", comp("D|M"));
-  printf("%s", jump("JEQ"));
-}
