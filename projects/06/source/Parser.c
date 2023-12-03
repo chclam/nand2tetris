@@ -41,7 +41,6 @@ int parserHasMoreCommands(Parser *parser) {
   return !feof(parser->ifp);
 }
 
-//void parserAdvance(FILE *ifp) {
 void parserAdvance(Parser *parser) {
   /* Reads the next command from the input and makes it the current command.
   Should be called only if hasMoreCommands() is true.
@@ -106,9 +105,38 @@ char *parserSymbol(Parser *parser) {
     char *symbolPtr = atPtr + 1;
     int symbolLen = strspn(symbolPtr, allowed);
 
-    char *ret = malloc(sizeof(char)*symbolLen);
-    strncpy(ret, symbolPtr, symbolLen);
-    return ret;
+    char *symb = malloc(sizeof(char)*symbolLen);
+    strncpy(symb, symbolPtr, symbolLen);
+
+    // validity checks
+    {
+      int isDecimal = 1;
+      for (char *s=symb; *s!='\0'; s++) {
+        if (!isdigit(*s)) isDecimal = 0;
+      }
+
+      if (isDecimal) {
+        if (strlen(symb) > 1 && symb[0] == 0) {
+          fprintf(stderr, "Leading 0s found in decimal number in line %d: %s", parser->currLineNumber, parser->currCommand);
+          exit(1);
+        }
+
+        if (atoi(symb) > 32768) {
+          fprintf(stderr, "Decimal greater than allowed by bit length of 32768 at line %d: %s", parser->currLineNumber, parser->currCommand);
+          exit(1);
+        }
+
+      } else {
+        if (isdigit(symb[0])) {
+          fprintf(stderr, "Invalid symbol for C-COMMAND found at line %d. Symbols must not start with a digit. %s",
+                  parser->currLineNumber,
+                  parser->currCommand);
+          exit(1);
+        }
+      }
+    }
+
+    return symb;
 
   } else {
     char *leftBrPtr = strchr(parser->currCommand, '(');
@@ -122,10 +150,10 @@ char *parserSymbol(Parser *parser) {
       exit(1);
     }
 
-    char *ret = malloc(sizeof(char)*symbolLen);
-    strncpy(ret, symbolPtr, symbolLen);
+    char *symb = malloc(sizeof(char)*symbolLen);
+    strncpy(symb, symbolPtr, symbolLen);
 
-    return ret;
+    return symb;
   } 
 }
 
