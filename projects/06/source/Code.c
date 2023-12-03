@@ -29,13 +29,13 @@ char *codeJump(char *mnemonic) {
   // deal with it.
   if (mnemonic == NULL) return NULL;
 
-  if (strstr(mnemonic, "JGT")) return "001";
-  if (strstr(mnemonic, "JEQ")) return "010";
-  if (strstr(mnemonic, "JGE")) return "011";
-  if (strstr(mnemonic, "JLT")) return "100";
-  if (strstr(mnemonic, "JNE")) return "101";
-  if (strstr(mnemonic, "JLE")) return "110";
-  if (strstr(mnemonic, "JMP")) return "111";
+  if (strcmp(mnemonic, "JGT") == 0) return "001";
+  if (strcmp(mnemonic, "JEQ") == 0) return "010";
+  if (strcmp(mnemonic, "JGE") == 0) return "011";
+  if (strcmp(mnemonic, "JLT") == 0) return "100";
+  if (strcmp(mnemonic, "JNE") == 0) return "101";
+  if (strcmp(mnemonic, "JLE") == 0) return "110";
+  if (strcmp(mnemonic, "JMP") == 0) return "111";
 
   return NULL;
 }
