@@ -4,7 +4,7 @@ typedef struct Parser {
   char currCommand[1024];
 } Parser;
 
-Parser *initParser(FILE*);
+Parser *initParser(char*);
 void parserAdvance(Parser*);
 int  parserHasMoreCommands(Parser*);
 int  parserCommandType(Parser*);

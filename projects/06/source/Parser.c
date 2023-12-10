@@ -27,12 +27,19 @@ const char *VALID_JUMPS[] = {
 }; 
 const int VALID_JUMPS_LEN = sizeof(VALID_JUMPS) * sizeof(char*);
 
-Parser *initParser(FILE *ifp) {
+Parser *initParser(char *inputFileName) {
   Parser *ret = malloc(sizeof(Parser));
   if (ret != NULL) {
-    ret->ifp=ifp;
+    ret->ifp = fopen(inputFileName, "r");
     ret->currLineNumber = 0;
+    ret->currCommand[0] = '\0';
   }
+
+  if (!ret->ifp) {
+    fprintf(stderr, "File %s not found.\n", inputFileName); 
+    exit(1);
+  } 
+
   return ret;
 }
 
@@ -105,15 +112,17 @@ char *parserSymbol(Parser *parser) {
     char *symbolPtr = atPtr + 1;
     int symbolLen = strspn(symbolPtr, allowed);
 
-    char *symb = malloc(sizeof(char)*symbolLen);
+    char *symb = malloc(sizeof(char)*symbolLen+1);
     strncpy(symb, symbolPtr, symbolLen);
+    symb[symbolLen] = '\0';
 
     // validity checks
+    int isDecimal = 1;
     {
-      int isDecimal = 1;
       for (char *s=symb; *s!='\0'; s++) {
-        if (!isdigit(*s)) isDecimal = 0;
-      }
+        if (!isdigit(*s))
+          isDecimal = 0;
+     }
 
       if (isDecimal) {
         if (strlen(symb) > 1 && symb[0] == 0) {
