@@ -23,3 +23,13 @@ ListStr *appendListStr(ListStr *node, char *val) {
 
   return ret;
 }
+
+unsigned listLen(ListStr *node) {
+  unsigned ret = 0;
+  ListStr *curr = node;
+  while (curr != NULL) {
+    ret++;
+    curr = node->next;
+  }
+  return ret;
+}

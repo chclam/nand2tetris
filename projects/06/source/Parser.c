@@ -103,7 +103,8 @@ int parserCommandType(Parser *parser) {
 char *parserSymbol(Parser *parser) {
   int cmdType = parserCommandType(parser);
 
-  if (!(cmdType == A_COMMAND || cmdType == L_COMMAND)) return NULL;
+  if (!(cmdType == A_COMMAND || cmdType == L_COMMAND))
+    return NULL;
 
   char *allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_.$:";
 
@@ -130,7 +131,7 @@ char *parserSymbol(Parser *parser) {
           exit(1);
         }
 
-        if (atoi(symb) > 32768) {
+        if (atoi(symb) > 32767) {
           fprintf(stderr, "Decimal greater than allowed by bit length of 32768 at line %d: %s", parser->currLineNumber, parser->currCommand);
           exit(1);
         }
@@ -159,9 +160,9 @@ char *parserSymbol(Parser *parser) {
       exit(1);
     }
 
-    char *symb = malloc(sizeof(char)*symbolLen);
+    char *symb = malloc(sizeof(char)*symbolLen+1);
     strncpy(symb, symbolPtr, symbolLen);
-
+    symb[symbolLen] = '\0';
     return symb;
   } 
 }

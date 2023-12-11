@@ -10,3 +10,4 @@ typedef struct ListStr {
 
 ListStr *initListStr();
 ListStr *appendListStr(ListStr*, char*);
+unsigned listLen(ListStr*);

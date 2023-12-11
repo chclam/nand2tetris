@@ -116,13 +116,13 @@ int main(int argc, char** argv) {
       parserAdvance(parser);
     }
 
-    unsigned ramAddress = 16;
+    // add variables in a command to hashmap
+    int ramAddress = 16;
     ListStr *head = aCommands;
     while (head != NULL) {
       if (!contains(head->val)) {
         addEntry(head->val, ramAddress++);
       }
-      free(head);
       head = head->next;
     }
     free(parser);
@@ -152,7 +152,6 @@ int main(int argc, char** argv) {
         if (isDecimal(symb)) {
           symbInt = atoi(symb);
         } else {
-          printf("%s\n", symb);
           assert(contains(symb));
           symbInt = getAddress(symb);
         }
