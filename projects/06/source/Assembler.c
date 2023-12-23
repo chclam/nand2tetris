@@ -15,6 +15,7 @@ char *inputFileName;
 #define BITLEN 15
 #define MAX_DECIMAL 32767 // 2 ** 15
 
+
 char *uIntToBinary(int x) {
   if (x > MAX_DECIMAL)
     return NULL;
@@ -49,6 +50,16 @@ int isDecimal(char *symb) {
   return 1;
 }
 
+void addRamAddress(ListStr *head, int *ramAddress) {
+  if (head->next == NULL)
+    return;
+
+  addRamAddress(head->next, ramAddress);
+
+  if (!contains(head->val)) {
+    addEntry(head->val, (*ramAddress)++);
+  }
+}
 
 int main(int argc, char** argv) {
   if (argc < 2) {
@@ -109,7 +120,7 @@ int main(int argc, char** argv) {
       } else if (cmdType == C_COMMAND) {
         romAddress++;
       } else if (cmdType == L_COMMAND) {
-        addEntry(symb, romAddress+1);
+        addEntry(symb, romAddress);
       } 
       free(symb);
 
@@ -118,13 +129,8 @@ int main(int argc, char** argv) {
 
     // add variables in a command to hashmap
     int ramAddress = 16;
-    ListStr *head = aCommands;
-    while (head != NULL) {
-      if (!contains(head->val)) {
-        addEntry(head->val, ramAddress++);
-      }
-      head = head->next;
-    }
+    // go through list recursively because the aCommands list starts from the tail
+    addRamAddress(aCommands, &ramAddress); 
     free(parser);
   }
 
